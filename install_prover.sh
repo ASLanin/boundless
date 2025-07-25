@@ -400,9 +400,9 @@ install_cuda() {
             error "Failed to update package list for CUDA"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! apt-get install -y "cuda-toolkit${CUDA_VERSION}"; then
+        if ! apt-get install -y "cuda-toolkit${CUDA_VERSION_SUFFIX}"; then
             error "Failed to install CUDA Toolkit"
-            if apt-get install -y "cuda-toolkit${CUDA_VERSION}" 2>&1 | grep -q "dpkg was interrupted"; then
+            if apt-get install -y "cuda-toolkit${CUDA_VERSION_SUFFIX}" 2>&1 | grep -q "dpkg was interrupted"; then
                 exit $EXIT_DPKG_ERROR
             fi
             exit $EXIT_DEPENDENCY_FAILED
