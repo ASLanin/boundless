@@ -17,8 +17,9 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-# for less interactivity
+# Less interactivity
 export DEBIAN_FRONTEND=noninteractive
+echo 'Dpkg::Options {"--force-confnew";};' | sudo tee /etc/apt/apt.conf.d/99force-confnew
 
 # Not all Cards works well with the last CUDA version. Keep empty to use the latest version
 CUDA_VERSION_SUFFIX="-12-8"
