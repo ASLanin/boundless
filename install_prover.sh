@@ -316,7 +316,7 @@ install_nvidia_toolkit() {
             error "Failed to update package list for NVIDIA toolkit"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! apt install -y nvidia-docker2 2>&1; then
+        if ! apt install -y nvidia-docker2; then
             error "Failed to install NVIDIA Docker support"
             if apt install -y nvidia-docker2 2>&1 | grep -q "dpkg was interrupted"; then
                 exit $EXIT_DPKG_ERROR
@@ -351,7 +351,7 @@ install_rust() {
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
         rustup update
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a  "$LOG_FILE"
     success "Rust installed"
 }
 
@@ -364,7 +364,7 @@ install_just() {
     info "Installing Just command runner..."
     {
         curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a  "$LOG_FILE"
     success "Just installed"
 }
 
@@ -394,14 +394,14 @@ install_cuda() {
             error "Failed to update package list for CUDA"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! apt-get install -y cuda-toolkit 2>&1; then
+        if ! apt-get install -y cuda-toolkit; then
             error "Failed to install CUDA Toolkit"
             if apt-get install -y cuda-toolkit 2>&1 | grep -q "dpkg was interrupted"; then
                 exit $EXIT_DPKG_ERROR
             fi
             exit $EXIT_DEPENDENCY_FAILED
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "CUDA Toolkit installed"
 }
 
@@ -1761,8 +1761,6 @@ main() {
     install_basic_deps
     install_gpu_drivers
     install_docker
-    echo "-- test stop --"
-    exit 0
     install_nvidia_toolkit
     install_rust
     install_just
