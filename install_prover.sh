@@ -17,6 +17,9 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# for less interactivity
+export DEBIAN_FRONTEND=noninteractive
+
 # Constants
 SCRIPT_NAME="$(basename "$0")"
 LOG_FILE="/var/log/boundless_prover_setup.log"
@@ -1758,6 +1761,8 @@ main() {
     install_basic_deps
     install_gpu_drivers
     install_docker
+    echo "-- test stop --"
+    exit 0
     install_nvidia_toolkit
     install_rust
     install_just
