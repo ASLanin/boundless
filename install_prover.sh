@@ -21,11 +21,14 @@ RESET='\033[0m'
 export DEBIAN_FRONTEND=noninteractive
 echo 'Dpkg::Options {"--force-confnew";};' | sudo tee /etc/apt/apt.conf.d/99force-confnew
 
-# Not all Cards works well with the last CUDA version. Keep empty to use the latest version
+# Not all Cards works well with the last CUDA version.
 CUDA_VERSION_SUFFIX="-12-8"
+cuda_version="${CUDA_VERSION_SUFFIX#-}"; cuda_version="${cuda_version//-/.}"
+echo "CUDA_VERSION=${cuda_version}" > .env
 
 # Set the Boundless release version
 BOUNDLESS_RELEASE_VERSION="release-0.13"
+BOUNDLESS_RELEASE_VERSION_NUMBER="${BOUNDLESS_RELEASE_VERSION#*-}"
 
 # Constants
 SCRIPT_NAME="$(basename "$0")"
@@ -483,7 +486,7 @@ install_rust_deps() {
 
     # Install bento-client with the RISC Zero toolchain
     info "Installing bento-client..."
-    RUSTUP_TOOLCHAIN=$TOOLCHAIN cargo install --locked --git https://github.com/risc0/risc0 bento-client --branch release-2.1 --bin bento_cli | tee -a "$LOG_FILE" || {
+    RUSTUP_TOOLCHAIN=$TOOLCHAIN cargo install --locked --git https://github.com/risc0/risc0 bento-client --branch release-2.3 --bin bento_cli | tee -a "$LOG_FILE" || {
         error "Failed to install bento-client"
         exit $EXIT_DEPENDENCY_FAILED
     }
@@ -496,7 +499,7 @@ install_rust_deps() {
 
     # Install boundless-cli
     info "Installing boundless-cli..."
-    cargo install --locked boundless-cli --version 0.12.1 | tee -a "$LOG_FILE" || {
+    cargo install --locked boundless-cli --version "$BOUNDLESS_RELEASE_VERSION_NUMBER" | tee -a "$LOG_FILE" || {
         error "Failed to install boundless-cli"
         exit $EXIT_DEPENDENCY_FAILED
     }
