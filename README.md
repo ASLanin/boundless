@@ -162,11 +162,7 @@ sudo apt install curl iptables build-essential git wget lz4 jq make gcc nano aut
 git clone https://github.com/boundless-xyz/boundless
 cd boundless
 
-# If interested in v0.13.1
-git checkout v0.13.1
-
-# If interested in v0.13.0
-git checkout v0.13.0
+git checkout release-0.13
 ```
 
 ### Install Dependecies
