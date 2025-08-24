@@ -26,7 +26,7 @@ x-exec-agent-common: &exec-agent-common
   cpus: 3
   environment:
     <<: *base-environment
-    LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-12.2/compat/}
+    LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     RISC0_KECCAK_PO2: ${RISC0_KECCAK_PO2:-17}
   entrypoint: /app/agent -t exec --segment-po2 ${SEGMENT_SIZE:-21} --redis-ttl ${REDIS_TTL:-57600}
 
@@ -147,11 +147,11 @@ services:
 
   aux_agent:
     <<: *agent-common
-    mem_limit: : 256M
+    mem_limit: 256M
     cpus: 1
     environment:
       <<: *base-environment
-      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-12.2/compat/}
+      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     entrypoint: /app/agent -t aux --monitor-requeue --redis-ttl ${REDIS_TTL:-57600}
 
   gpu_prove_agent0:
@@ -215,7 +215,7 @@ services:
     entrypoint: /app/agent -t snark --redis-ttl ${REDIS_TTL:-57600}
     environment:
       <<: *base-environment
-      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-12.2/compat/}
+      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     ulimits:
       stack: 90000000
 

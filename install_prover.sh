@@ -17,6 +17,19 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# Less interactivity
+export DEBIAN_FRONTEND=noninteractive
+echo 'Dpkg::Options {"--force-confnew";};' | sudo tee /etc/apt/apt.conf.d/99force-confnew
+
+# Not all Cards works well with the last CUDA version.
+CUDA_VERSION_SUFFIX="-12-8"
+cuda_version="${CUDA_VERSION_SUFFIX#-}"; cuda_version="${cuda_version//-/.}"
+echo "CUDA_VERSION=${cuda_version}" > .env
+
+# Set the Boundless release version
+BOUNDLESS_RELEASE_VERSION="release-0.13"
+BOUNDLESS_RELEASE_VERSION_NUMBER="${BOUNDLESS_RELEASE_VERSION#*-}"
+
 # Constants
 SCRIPT_NAME="$(basename "$0")"
 LOG_FILE="/var/log/boundless_prover_setup.log"
@@ -213,7 +226,7 @@ update_system() {
             fi
             exit $EXIT_DEPENDENCY_FAILED
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "System packages updated"
 }
 
@@ -238,7 +251,7 @@ install_basic_deps() {
             fi
             exit $EXIT_DEPENDENCY_FAILED
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "Basic dependencies installed"
 }
 
@@ -253,7 +266,7 @@ install_gpu_drivers() {
             error "Failed to install GPU drivers"
             exit $EXIT_GPU_ERROR
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "GPU drivers installed"
 }
 
@@ -291,7 +304,7 @@ install_docker() {
         systemctl enable docker
         systemctl start docker
         usermod -aG docker $(logname 2>/dev/null || echo "$USER")
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "Docker installed"
 }
 
@@ -313,7 +326,7 @@ install_nvidia_toolkit() {
             error "Failed to update package list for NVIDIA toolkit"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! apt install -y nvidia-docker2 2>&1; then
+        if ! apt install -y nvidia-docker2; then
             error "Failed to install NVIDIA Docker support"
             if apt install -y nvidia-docker2 2>&1 | grep -q "dpkg was interrupted"; then
                 exit $EXIT_DPKG_ERROR
@@ -333,7 +346,7 @@ install_nvidia_toolkit() {
 }
 EOF
         systemctl restart docker
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "NVIDIA Container Toolkit installed"
 }
 
@@ -348,7 +361,7 @@ install_rust() {
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
         rustup update
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a  "$LOG_FILE"
     success "Rust installed"
 }
 
@@ -361,7 +374,7 @@ install_just() {
     info "Installing Just command runner..."
     {
         curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a  "$LOG_FILE"
     success "Just installed"
 }
 
@@ -391,14 +404,14 @@ install_cuda() {
             error "Failed to update package list for CUDA"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! apt-get install -y cuda-toolkit 2>&1; then
+        if ! apt-get install -y "cuda-toolkit${CUDA_VERSION_SUFFIX}"; then
             error "Failed to install CUDA Toolkit"
-            if apt-get install -y cuda-toolkit 2>&1 | grep -q "dpkg was interrupted"; then
+            if apt-get install -y "cuda-toolkit${CUDA_VERSION_SUFFIX}" 2>&1 | grep -q "dpkg was interrupted"; then
                 exit $EXIT_DPKG_ERROR
             fi
             exit $EXIT_DEPENDENCY_FAILED
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "CUDA Toolkit installed"
 }
 
@@ -433,19 +446,19 @@ install_rust_deps() {
 
     # Always install rzup and the RISC Zero Rust toolchain
     info "Installing rzup..."
-    curl -L https://risczero.com/install | bash >> "$LOG_FILE" 2>&1 || {
+    curl -L https://risczero.com/install | bash | tee -a "$LOG_FILE" || {
         error "Failed to install rzup"
         exit $EXIT_DEPENDENCY_FAILED
     }
     # Update PATH in the current shell
     export PATH="$PATH:/root/.risc0/bin"
     # Source bashrc to ensure environment is updated
-    PS1='' source ~/.bashrc >> "$LOG_FILE" 2>&1 || {
+    PS1='' source ~/.bashrc | tee -a "$LOG_FILE" || {
         error "Failed to source ~/.bashrc after rzup install"
         exit $EXIT_DEPENDENCY_FAILED
     }
     # Install RISC Zero Rust toolchain
-    rzup install rust >> "$LOG_FILE" 2>&1 || {
+    rzup install rust | tee -a "$LOG_FILE" || {
         error "Failed to install RISC Zero Rust toolchain"
         exit $EXIT_DEPENDENCY_FAILED
     }
@@ -461,11 +474,11 @@ install_rust_deps() {
     # Install cargo-risczero
     if ! command_exists cargo-risczero; then
         info "Installing cargo-risczero..."
-        cargo install cargo-risczero >> "$LOG_FILE" 2>&1 || {
+        cargo install cargo-risczero | tee -a "$LOG_FILE"  || {
             error "Failed to install cargo-risczero"
             exit $EXIT_DEPENDENCY_FAILED
         }
-        rzup install cargo-risczero >> "$LOG_FILE" 2>&1 || {
+        rzup install cargo-risczero | tee -a "$LOG_FILE" || {
             error "Failed to install cargo-risczero via rzup"
             exit $EXIT_DEPENDENCY_FAILED
         }
@@ -473,8 +486,7 @@ install_rust_deps() {
 
     # Install bento-client with the RISC Zero toolchain
     info "Installing bento-client..."
-    RUSTUP_TOOLCHAIN=$TOOLCHAIN cargo install --locked --git https://github.com/risc0/risc0 bento-client --branch release-2.3 --bin bento_cli
- >> "$LOG_FILE" 2>&1 || {
+    RUSTUP_TOOLCHAIN=$TOOLCHAIN cargo install --locked --git https://github.com/risc0/risc0 bento-client --branch release-2.3 --bin bento_cli | tee -a "$LOG_FILE" || {
         error "Failed to install bento-client"
         exit $EXIT_DEPENDENCY_FAILED
     }
@@ -487,7 +499,7 @@ install_rust_deps() {
 
     # Install boundless-cli
     info "Installing boundless-cli..."
-    cargo install --locked boundless-cli >> "$LOG_FILE" 2>&1 || {
+    cargo install --locked boundless-cli --version "^$BOUNDLESS_RELEASE_VERSION_NUMBER" | tee -a "$LOG_FILE" || {
         error "Failed to install boundless-cli"
         exit $EXIT_DEPENDENCY_FAILED
     }
@@ -515,7 +527,7 @@ clone_repository() {
                 rm -rf "$INSTALL_DIR"
             else
                 cd "$INSTALL_DIR"
-                if ! git pull origin release-0.13 2>&1 >> "$LOG_FILE"; then
+                if ! git pull origin ${BOUNDLESS_RELEASE_VERSION} | tee -a "$LOG_FILE"; then
                     error "Failed to update repository"
                     exit $EXIT_DEPENDENCY_FAILED
                 fi
@@ -524,20 +536,20 @@ clone_repository() {
         fi
     fi
     {
-        if ! git clone https://github.com/boundless-xyz/boundless "$INSTALL_DIR" 2>&1; then
+        if ! git clone https://github.com/boundless-xyz/boundless "$INSTALL_DIR"; then
             error "Failed to clone repository"
             exit $EXIT_DEPENDENCY_FAILED
         fi
         cd "$INSTALL_DIR"
-        if ! git checkout release-0.13 2>&1; then
-            error "Failed to checkout release-0.13"
+        if ! git checkout ${BOUNDLESS_RELEASE_VERSION} ; then
+            error "Failed to checkout ${BOUNDLESS_RELEASE_VERSION}"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-        if ! git submodule update --init --recursive 2>&1; then
+        if ! git submodule update --init --recursive ; then
             error "Failed to initialize submodules"
             exit $EXIT_DEPENDENCY_FAILED
         fi
-    } >> "$LOG_FILE" 2>&1
+    } | tee -a "$LOG_FILE"
     success "Repository cloned and initialized"
 }
 
