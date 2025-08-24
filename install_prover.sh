@@ -30,8 +30,8 @@ echo "CUDA_VERSION=${cuda_version}" > .env
 BOUNDLESS_RELEASE_VERSION="release-0.13"
 BOUNDLESS_RELEASE_VERSION_NUMBER="${BOUNDLESS_RELEASE_VERSION#*-}"
 BOUNDLESS_MAIN_RELEASE_VERSION_NUMBER="${BOUNDLESS_RELEASE_VERSION_NUMBER%.*}"
-BOUNDLESS_RELEASE_VERSION="v0.13.2"
-BOUNDLESS_MAIN_RELEASE_VERSION_NUMBER="0.13"
+BOUNDLESS_RELEASE_VERSION="v0.13.0"
+BOUNDLESS_MAIN_RELEASE_VERSION_NUMBER="0.13.0"
 
 
 # Constants
@@ -503,7 +503,7 @@ install_rust_deps() {
 
     # Install boundless-cli
     info "Installing boundless-cli..."
-    cargo install --locked boundless-cli --version "^$BOUNDLESS_MAIN_RELEASE_VERSION_NUMBER" | tee -a "$LOG_FILE" || {
+    cargo install --locked boundless-cli --version "$BOUNDLESS_MAIN_RELEASE_VERSION_NUMBER" | tee -a "$LOG_FILE" || {
         error "Failed to install boundless-cli"
         exit $EXIT_DEPENDENCY_FAILED
     }
