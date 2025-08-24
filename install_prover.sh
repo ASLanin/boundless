@@ -27,7 +27,7 @@ cuda_version="${CUDA_VERSION_SUFFIX#-}"; cuda_version="${cuda_version//-/.}"
 echo "CUDA_VERSION=${cuda_version}" > .env
 
 # Set the Boundless release version
-BOUNDLESS_RELEASE_VERSION="release-0.13"
+BOUNDLESS_RELEASE_VERSION="release-0.13.2"
 BOUNDLESS_RELEASE_VERSION_NUMBER="${BOUNDLESS_RELEASE_VERSION#*-}"
 
 # Constants
