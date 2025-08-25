@@ -611,9 +611,8 @@ x-base-environment: &base-environment
   RUST_BACKTRACE: 1
 
 x-agent-common: &agent-common
-  image: risczero/risc0-bento-agent:stable@sha256:c6fcc92686a5d4b20da963ebba3045f09a64695c9ba9a9aa984dd98b5ddbd6f9
+  image: risczero/risc0-bento-agent:2.3.1@sha256:7873f18005efff03fc5399f1bdcb6760cda7ffbd4fdd4d9c39aedee8972e0a0d
   restart: always
-  runtime: nvidia
   depends_on:
     - postgres
     - redis
@@ -627,8 +626,9 @@ x-exec-agent-common: &exec-agent-common
   cpus: 3
   environment:
     <<: *base-environment
+    LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     RISC0_KECCAK_PO2: ${RISC0_KECCAK_PO2:-17}
-  entrypoint: /app/agent -t exec --segment-po2 ${SEGMENT_SIZE:-21}
+  entrypoint: /app/agent -t exec --segment-po2 ${SEGMENT_SIZE:-21} --redis-ttl ${REDIS_TTL:-57600}
 
 x-broker-environment: &broker-environment
   RUST_LOG: ${RUST_LOG:-info,broker=debug,boundless_market=debug}
@@ -750,15 +750,19 @@ services:
     <<: *agent-common
     mem_limit: 256M
     cpus: 1
+    environment:
+      <<: *base-environment
+      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     entrypoint: /app/agent -t aux --monitor-requeue
 EOF
     for i in $(seq 0 $((GPU_COUNT - 1))); do
         cat >> "$COMPOSE_FILE" << EOF
   gpu_prove_agent$i:
     <<: *agent-common
+    runtime: nvidia
     mem_limit: 4G
     cpus: 4
-    entrypoint: /app/agent -t prove
+    entrypoint: /app/agent -t prove --redis-ttl ${REDIS_TTL:-57600}
     deploy:
       resources:
         reservations:
@@ -771,12 +775,15 @@ EOF
     cat >> "$COMPOSE_FILE" << 'EOF'
   snark_agent:
     <<: *agent-common
-    entrypoint: /app/agent -t snark
+    entrypoint: /app/agent -t snark --redis-ttl ${REDIS_TTL:-57600}
+    environment:
+      <<: *base-environment
+      LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
     ulimits:
       stack: 90000000
 
   rest_api:
-    image: risczero/risc0-bento-rest-api:stable@sha256:7b5183811675d0aa3646d079dec4a7a6d47c84fab4fa33d3eb279135f2e59207
+    image: risczero/risc0-bento-rest-api:2.3.1@sha256:71dafe532d4e1ada47989b63cf04b2e2bae6b62eebb5d47973e875e2eddf6c3a
     restart: always
     depends_on:
       - postgres
