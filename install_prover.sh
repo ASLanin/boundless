@@ -24,7 +24,7 @@ echo 'Dpkg::Options {"--force-confnew";};' | sudo tee /etc/apt/apt.conf.d/99forc
 # Not all Cards works well with the last CUDA version.
 CUDA_VERSION_SUFFIX="-12-8"
 cuda_version="${CUDA_VERSION_SUFFIX#-}"; cuda_version="${cuda_version//-/.}"
-echo "CUDA_VERSION=${cuda_version}" > .env
+
 
 # Set the Boundless release version
 BOUNDLESS_RELEASE_VERSION="release-0.13"
@@ -753,7 +753,7 @@ services:
     environment:
       <<: *base-environment
       LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-/usr/local/cuda-${CUDA_VERSION}/compat/}
-    entrypoint: /app/agent -t aux --monitor-requeue
+    entrypoint: /app/agent -t aux --monitor-requeue --redis-ttl ${REDIS_TTL:-57600}
 EOF
     for i in $(seq 0 $((GPU_COUNT - 1))); do
         cat >> "$COMPOSE_FILE" << EOF
@@ -887,6 +887,7 @@ export ORDER_STREAM_URL="$ORDER_STREAM_URL"
 export RPC_URL="$RPC_URL"
 export PRIVATE_KEY=$PRIVATE_KEY
 export SEGMENT_SIZE=$SEGMENT_SIZE
+export CUDA_VERSION=${cuda_version:-12.8}
 
 # Prover node configs
 RUST_LOG=info
