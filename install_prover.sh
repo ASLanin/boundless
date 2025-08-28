@@ -915,6 +915,7 @@ export ORDER_STREAM_URL="https://base-mainnet.beboundless.xyz"
 export RPC_URL="$RPC_URL"
 export PRIVATE_KEY=$PRIVATE_KEY
 export SEGMENT_SIZE=$SEGMENT_SIZE
+export CUDA_VERSION=${cuda_version:-12.8}
 EOF
     cat > "$INSTALL_DIR/.env.base-sepolia" << EOF
 export VERIFIER_ADDRESS=0x0b144e07a0826182b6b59788c34b32bfa86fb711
@@ -924,6 +925,7 @@ export ORDER_STREAM_URL="https://base-sepolia.beboundless.xyz"
 export RPC_URL="$RPC_URL"
 export PRIVATE_KEY=$PRIVATE_KEY
 export SEGMENT_SIZE=$SEGMENT_SIZE
+export CUDA_VERSION=${cuda_version:-12.8}
 EOF
     cat > "$INSTALL_DIR/.env.eth-sepolia" << EOF
 export VERIFIER_ADDRESS=0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187
@@ -933,6 +935,7 @@ export ORDER_STREAM_URL="https://eth-sepolia.beboundless.xyz/"
 export RPC_URL="$RPC_URL"
 export PRIVATE_KEY=$PRIVATE_KEY
 export SEGMENT_SIZE=$SEGMENT_SIZE
+export CUDA_VERSION=${cuda_version:-12.8}
 EOF
     chmod 600 "$INSTALL_DIR/.env.broker"
     chmod 600 "$INSTALL_DIR/.env.base"
