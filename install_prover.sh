@@ -537,7 +537,7 @@ clone_repository() {
         fi
     fi
     {
-        if ! git clone https://github.com/boundless-xyz/boundless "$INSTALL_DIR"; then
+        if ! git clone git@github.com:ASLanin/boundles-tuned.git "$INSTALL_DIR"; then
             error "Failed to clone repository"
             exit $EXIT_DEPENDENCY_FAILED
         fi
